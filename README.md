@@ -101,3 +101,102 @@ Token design
 2. Max supply - capped = 100,000
 
 Let's say we want to use the 70k tokens to create a liquidity pool on Uniswap and 30k as reward system.
+
+
+Now let's go back to the code, set an owner variable and set it in the constructor.
+
+```
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.17;
+
+import 'https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/ERC20.sol';
+
+contract OceanToken is ERC20 {
+
+    address payable public owner;
+    constructor(uint256 initialSupply) ERC20("OceanToken", "OCT") {
+        owner = payable(msg.sender);
+        _mint(owner, initialSupply);
+    }
+}
+```
+
+Now let's work on the initial supply..
+
+```
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.17;
+
+import 'https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/ERC20.sol';
+
+contract OceanToken is ERC20 {
+
+    address payable public owner;
+    constructor() ERC20("OceanToken", "OCT") {
+        owner = payable(msg.sender);
+        _mint(owner, 70000 ** decimals());
+    }
+}
+```
+
+Now let's implement the max supply.
+
+To do that we import the ERC20 capped contract from openzeppelin.
+
+Because ERC20Capped, inherits from ERC20, we can replace it.
+
+We will also pass in a new constructor parameter.
+
+```
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.17;
+
+import 'https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/ERC20.sol';
+import 'https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/extensions/ERC20Capped.sol';
+
+
+contract OceanToken is ERC20Capped {
+
+    address payable public owner;
+    constructor(uint256 cap) ERC20("OceanToken", "OCT") ERC20Capped(cap * (10 ** decimals())) {
+        owner = payable(msg.sender);
+        _mint(owner, 70000 ** decimals());
+    }
+}
+```
+
+Now let's make the token burnable.
+
+We will import ERC20Burnable from openzeppelin.
+
+```
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.17;
+
+import 'https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/ERC20.sol';
+import 'https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/extensions/ERC20Capped.sol';
+import 'https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/extensions/ERC20Burnable.sol';
+
+contract OceanToken is ERC20Capped, ERC20Burnable {
+
+    address payable public owner;
+    constructor(uint256 cap) ERC20("OceanToken", "OCT") ERC20Capped(cap * (10 ** decimals())) {
+        owner = payable(msg.sender);
+        _mint(owner, 70000 ** decimals());
+    }
+}
+```
+
+
+Now let's create block reward to distribute new supply to miners..
+
+
+We're going to have a new variable called blockReward and a hook called beforeTokenTransfer.
+
+We can extend any functionality to whatever you want to happen before any transfer.
+
+ 
