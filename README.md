@@ -195,8 +195,129 @@ contract OceanToken is ERC20Capped, ERC20Burnable {
 Now let's create block reward to distribute new supply to miners..
 
 
-We're going to have a new variable called blockReward and a hook called beforeTokenTransfer.
+We're going to have a new variable called blockReward(then set it to the constructor) and a hook called beforeTokenTransfer.
 
 We can extend any functionality to whatever you want to happen before any transfer.
 
+ We will create variable mintMinerReward - mint new tokens depending on blockReward.
  
+ We will create a function called setBlockReward aand set an onlyOwner modifier, so only the owner can set block reward.
+ 
+ Then we will create a mintMinerReward function
+ 
+ 
+ ```
+ // SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.17;
+
+import 'https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/ERC20.sol';
+import 'https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/extensions/ERC20Capped.sol';
+import 'https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/extensions/ERC20Burnable.sol';
+
+contract OceanToken is ERC20Capped, ERC20Burnable {
+
+    address payable public owner;
+    uint256 public blockReward;
+
+
+    constructor(uint256 cap, uint256 reward) ERC20("OceanToken", "OCT") ERC20Capped(cap * (10 ** decimals())) {
+        owner = payable(msg.sender);
+        _mint(owner, 70000 ** decimals());
+        blockReward = reward ** decimals();
+    }
+
+    modifier onlyOwner {
+        require(msg.sender == owner, "only the owner can call this function");
+        _; 
+    }
+
+    function setBlockReward(uint256 reward) public onlyOwner {
+        blockReward = reward * (10 ** decimals());
+    }
+
+    function _mintMinerReward() internal {
+        _mint(block.coinbase, blockReward);
+    }
+
+    function _beforeTokenTransfer(address from, address to, uint256 value) internal virtual override {
+        if(from != address(0) && to != block.coinbase && block.coinbase != address(0)){
+            _mintMinerReward();
+        }
+        super._beforeTokenTransfer(from, to, value);
+    }
+
+    function destroy() public onlyOwner {
+        selfdestruct(owner);
+    }
+
+
+}
+```
+
+That concludes our token design.
+
+Now we can compile our code and test.
+
+Compile with ```npx hardhat compile```
+
+By now you would have discovered that the ```_mint``` function is being called from ERC20Capped and ERC20Burnable.]]
+
+Now go to ERC20Capped in openzeppelin on Hardhat, copy the mint function,and paste under the constructor of our contract.
+
+```
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.17;
+
+import 'https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/ERC20.sol';
+import 'https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/extensions/ERC20Capped.sol';
+import 'https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/extensions/ERC20Burnable.sol';
+
+contract OceanToken is ERC20Capped, ERC20Burnable {
+
+    address payable public owner;
+    uint256 public blockReward;
+
+
+    constructor(uint256 cap, uint256 reward) ERC20("OceanToken", "OCT") ERC20Capped(cap * (10 ** decimals())) {
+        owner = payable(msg.sender);
+        _mint(owner, 70000 ** decimals());
+        blockReward = reward ** decimals();
+    }
+
+    function _mint(address account, uint256 amount) internal virtual override(ERC20Capped, ERC20) {
+        require(ERC20.totalSupply() + amount <= cap(), "ERC20Capped: cap exceeded");
+        super._mint(account, amount);
+    }
+
+    modifier onlyOwner {
+        require(msg.sender == owner, "only the owner can call this function");
+        _; 
+    }
+
+    function setBlockReward(uint256 reward) public onlyOwner {
+        blockReward = reward * (10 ** decimals());
+    }
+
+    function _mintMinerReward() internal {
+        _mint(block.coinbase, blockReward);
+    }
+
+    function _beforeTokenTransfer(address from, address to, uint256 value) internal virtual override {
+        if(from != address(0) && to != block.coinbase && block.coinbase != address(0)){
+            _mintMinerReward();
+        }
+        super._beforeTokenTransfer(from, to, value);
+    }
+
+    function destroy() public onlyOwner {
+        selfdestruct(owner);
+    }
+
+
+}
+```
+ 
+ 
+ Now the next step is to write unit tests.
