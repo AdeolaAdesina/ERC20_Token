@@ -549,3 +549,20 @@ INFURA_GOERLI_ENDPOINT=
 
 Now deploy with ```npx hardhat run --network goerli scripts/deploy.js```
 
+![Screenshot 2022-11-20 at 07 44 39](https://user-images.githubusercontent.com/29931071/202891904-a72d97db-eff0-4293-871e-19c95f8ff7df.png)
+
+
+Now grab the address, save it and verify it on etherscan. - https://etherscan.io/
+
+
+
+Go to metamask to import tokens.
+
+![Screenshot 2022-11-20 at 07 47 39](https://user-images.githubusercontent.com/29931071/202892024-907b0fde-3907-464e-a837-daa534a7b998.png)
+
+![Screenshot 2022-11-20 at 07 49 36](https://user-images.githubusercontent.com/29931071/202892034-bbe5e6e7-5b26-4a27-9658-c65fa004e7d0.png)
+
+
+
+
+
